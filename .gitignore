@@ -3,3 +3,4 @@ Cargo.lock
 .cargo-lock
 build-script-build-script-build
 .DS_Store
+.main.rs.swp
