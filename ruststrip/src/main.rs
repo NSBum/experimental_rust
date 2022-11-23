@@ -22,8 +22,8 @@ impl Stripped {
 async fn main() -> Result<(), ExitFailure> {
     let args: Vec<String> = env::args().collect();
     let mut rawword: String = "благови́дный".to_string();
-
-    if args.len() < 1 {
+    println!("There are {} arguments. First is {}", args.len(), args[0]);
+    if args.len() < 2 {
         println!("Since you didn't specify a word, it has defaulted to благови́дный.");
     } else {
         rawword = args[1].clone();
