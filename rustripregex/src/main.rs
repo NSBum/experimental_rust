@@ -1,6 +1,10 @@
 use regex::Regex;
 use std::env;
 
+fn print_type_of<T>(_: &T) {
+    println!("{}", std::any::type_name::<T>())
+}
+
 #[allow(dead_code)]
 fn get_sentence_alt() -> String {
     // this is an alternate way of doing it, but it
@@ -22,6 +26,7 @@ fn get_sentence() -> String {
     // rather than test args length, or worse, risking
     // panic, we get get an Option<&String> and match
     let param: Option<&String> = args.get(1);
+    print_type_of(&param);
     match param {
         Some(param) => param.to_string(),
         None => "Уверя́ю вас, что подо́бная оши́бка никогда не повтори́тся.".to_string(),
