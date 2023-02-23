@@ -1,6 +1,6 @@
-use rusqlite::NO_PARAMS;
-use rusqlite::{Connection, Result};
-use regex::Regex;
+use rusqlite::{params, Connection, Result};
+//use regex::Regex;
+use dirs;
 
 #[derive(Debug)]
 struct Abbreviation {
@@ -10,12 +10,16 @@ struct Abbreviation {
 
 
 fn main() -> Result<()>  {
-    let conn = Connection::open("/Users/alan/cli/ruabbrevs.sqlite")?;
+    let mut db_path = dirs::home_dir().expect("Could not get home directory");
+    db_path.push("cli");
+    db_path.push("ruabbrevs.sqlite");
+    println!("db_path {}", db_path.display());
+    let conn = Connection::open(db_path)?;
     let mut stmt = conn.prepare(
         "SELECT * FROM abbrevs;",
     )?;
 
-    let abbrevs = stmt.query_map(NO_PARAMS, |row| {
+    let abbrevs = stmt.query_map(params![], |row| {
         Ok(Abbreviation {
             id: row.get(0)?,
             term: row.get(1)?,
@@ -32,7 +36,7 @@ fn main() -> Result<()>  {
         let term = a.term;
         let escaped = format!("_{}_", term);
         println!("{} → {}", term, escaped);
-        let temp: &str = text;//"нар.-поэт. самка";
+        //let temp: &str = text;//"нар.-поэт. самка";
         t = t.replace(&term, &escaped);
         println!("{}", t);
     }
