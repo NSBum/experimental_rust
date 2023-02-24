@@ -4,3 +4,4 @@ Cargo.lock
 build-script-build-script-build
 .DS_Store
 .main.rs.swp
+.vscode/settings.json
