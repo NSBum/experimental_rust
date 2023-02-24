@@ -3,15 +3,16 @@ use rusqlite::{params, Connection, Result};
 use dirs;
 use std::path::{PathBuf, Path};
 use std::fs::{self};
+use tabled::{Table, Tabled};
+mod utils;
 
-//#[derive(Debug)]
-#[allow(dead_code)]
+#[derive(Debug)]
+#[derive(Tabled)]
 struct Book {
     id: String,
     annotations: u32,
     title: String,
     author: String,
-    term: String,
 }
 
 /**
@@ -114,18 +115,89 @@ fn database_connection() -> Result<Connection> {
     Ok(conn)
 }
 
+// fn print_all_books(conn: &Connection) {
+// //     let query = "select 
+// //         ZBKLIBRARYASSET.ZASSETID,
+// //         ZBKLIBRARYASSET.ZTITLE,
+// //         ZBKLIBRARYASSET.ZAUTHOR,    
+// //         count(a.ZAEANNOTATION.Z_PK)
+// // from ZBKLIBRARYASSET left join a.ZAEANNOTATION
+// //     on a.ZAEANNOTATION.ZANNOTATIONASSETID = ZBKLIBRARYASSET.ZASSETID
+// // WHERE a.ZAEANNOTATION.ZANNOTATIONSELECTEDTEXT NOT NULL
+// // GROUP BY ZBKLIBRARYASSET.ZASSETID;";
+    
+// }
+
+fn extract_last_name(input: &str) -> Option<String> {
+    let re = regex::Regex::new(r"(?i)(?:(?:^|\s)(?:Dr\.|Mr\.|Mrs\.|Ms\.|Miss\.|Sir\.|Prof\.|Rev\.|Hon\.|Ph\.D\.|MD\.|D\.D\.S\.))?\s*([A-Za-z']+),?").unwrap();
+    let caps = re.captures(input)?;
+    let mut last_name = caps[1].to_string();
+
+    // Remove any titles that may appear after the last name
+    let title_re = regex::Regex::new(r"(?i)\b(?:Dr\.|Mr\.|Mrs\.|Ms\.|Miss\.|Sir\.|Prof\.|Rev\.|Hon\.|Ph\.D\.|MD\.|D\.D\.S\.)\b").unwrap();
+    last_name = title_re.replace_all(&last_name, "").trim().to_string();
+
+    Some(last_name)
+}
+
+fn format_name(input: &str) -> Option<String> {
+    let last_name = extract_last_name(input)?;
+    Some(format!("({})", last_name))
+}
+
+
+
 #[allow(unused_variables)]
 fn main() -> Result<()> {
-    let c = database_connection();
-
+    let c = database_connection()?;
+    let mut stmt = c.prepare("select 
+    ZBKLIBRARYASSET.ZASSETID,
+    ZBKLIBRARYASSET.ZTITLE,
+    ZBKLIBRARYASSET.ZAUTHOR,    
+    count(ae.ZAEANNOTATION.Z_PK)
+from ZBKLIBRARYASSET left join ae.ZAEANNOTATION
+on ae.ZAEANNOTATION.ZANNOTATIONASSETID = ZBKLIBRARYASSET.ZASSETID
+WHERE ae.ZAEANNOTATION.ZANNOTATIONSELECTEDTEXT NOT NULL
+GROUP BY ZBKLIBRARYASSET.ZASSETID;")?;
+    let books = stmt.query_map(params![], |row| {
+        Ok(Book {
+            id: row.get(0)?,
+            title: row.get(1)?,
+            author: row.get(2)?,
+            annotations: row.get(3)?,
+        })
+    })?;
+    /* 
+    for book in books {
+        println!("Found book {:?}", book);
+    }
+    let all = books.values().cloned().collect();
+    */
+    let book_set: Result<Vec<Book>> = books.collect();
+    match book_set {
+        Ok(all_books) => {
+            //println!("Found books: {:?}", all_books);
+            let table = Table::new(all_books);
+            println!("{}", table);
+        }
+        Err(error) => {
+            println!("Error looking up all books: {:?}", error);
+        }
+    }
+    
+    match format_name("Dr. John Doe") {
+        Some(name) => println!("{}", name),
+        None => println!("Nothing"),
+    }
     Ok(())
 }
 
 #[cfg(test)]
 mod test {
     use crate::{ibooks_directory_path, get_last_path_component};
+    use crate::{format_name};
     use crate::Path;
-    
+
     #[test]
     fn test_ibooks_dir_not_valid() {
         assert_eq!(ibooks_directory_path("DogFish"), None)
@@ -141,5 +213,15 @@ mod test {
     #[test]
     fn test_last_path_comp() {
         assert_eq!(get_last_path_component(Path::new("/Users/dog/fish")), "fish")
+    }
+
+    #[test]
+    fn test_name_dr_pre_period() {
+        match format_name("Dr. John Doe") {
+            Some(name) => {
+                assert_eq!(name, "(Doe)");
+            },
+            None => assert!(0 > 1),
+        }
     }
 }

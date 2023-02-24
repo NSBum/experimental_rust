@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 rusqlite = "0.28.0"
 dirs = "3.0.2"
+tabled = "0.10.0"
+regex = "1.7.1"
