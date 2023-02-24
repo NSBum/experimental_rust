@@ -14,10 +14,30 @@ struct Book {
     term: String,
 }
 
+/**
+Returns the last path component of a path
+
+# Arguments
+
+* `path` - the file path from which to extract the last component
+
+
+*/
 fn get_last_path_component(path: &Path) -> String {
     path.file_name().unwrap().to_string_lossy().into_owned()
 }
 
+/**
+Returns an Option<PathBuf> for the main sqlite file
+inside an iBooks directory. Each data directory has a 
+single sqlite database. This function finds that database 
+and returns a path to it.
+
+# Arguments
+
+* `dir_path` - the directory path of an iBooks data directory
+
+*/
 fn find_sqlite_file(dir_path: &PathBuf) -> Option<PathBuf> {
     let prefix = get_last_path_component(dir_path);
     if let Ok(entries) = fs::read_dir(&dir_path) {
@@ -39,6 +59,15 @@ fn find_sqlite_file(dir_path: &PathBuf) -> Option<PathBuf> {
     None
 }
 
+/// Returns path to iBooks data directory
+/// 
+/// Given one of "AEAnnotation" or "BKLibrary" returns the path to
+/// that iBooks data directory
+/// 
+/// # Arguments
+/// 
+/// * `name` - the name of the directory of interest
+/// 
 fn ibooks_directory_path(name: &str) -> PathBuf {
     let mut dir_path = dirs::home_dir().expect("Could not get home directory");
     dir_path.push("Library/Containers/com.apple.iBooksX/Data/Documents/");
