@@ -93,14 +93,12 @@ fn database_connection() -> Result<Connection> {
     };
     let bk_path:PathBuf = match find_sqlite_file(&bk_dir_path) {
         Some(bk_path) => {
-            println!("The bk_path TEST is {}", bk_path.display());
             bk_path
         },
         None => panic!("no BKLibrary sqlite file"),
     };
     let ae_path:PathBuf =  match find_sqlite_file(&ae_dir_path) {
         Some(ae_path) => {
-            println!("The ae_path TEST is {}", ae_path.display());
             ae_path
         },
         None => panic!("No AEAnnotation sqlite file"),
@@ -118,7 +116,7 @@ fn database_connection() -> Result<Connection> {
 // fn print_all_books(conn: &Connection) {
 // //     let query = "select 
 // //         ZBKLIBRARYASSET.ZASSETID,
-// //         ZBKLIBRARYASSET.ZTITLE,
+// //         substr(ZBKLIBRARYASSET.ZTITLE,0,29),
 // //         ZBKLIBRARYASSET.ZAUTHOR,    
 // //         count(a.ZAEANNOTATION.Z_PK)
 // // from ZBKLIBRARYASSET left join a.ZAEANNOTATION
@@ -152,7 +150,13 @@ fn main() -> Result<()> {
     let c = database_connection()?;
     let mut stmt = c.prepare("select 
     ZBKLIBRARYASSET.ZASSETID,
-    ZBKLIBRARYASSET.ZTITLE,
+    CASE
+        WHEN LENGTH(ZBKLIBRARYASSET.ZTITLE) > 30 THEN
+            substr(ZBKLIBRARYASSET.ZTITLE,1,30) || '...'
+        ELSE
+            ZBKLIBRARYASSET.ZTITLE
+        END BookTitle,
+
     ZBKLIBRARYASSET.ZAUTHOR,    
     count(ae.ZAEANNOTATION.Z_PK)
 from ZBKLIBRARYASSET left join ae.ZAEANNOTATION
@@ -167,12 +171,6 @@ GROUP BY ZBKLIBRARYASSET.ZASSETID;")?;
             annotations: row.get(3)?,
         })
     })?;
-    /* 
-    for book in books {
-        println!("Found book {:?}", book);
-    }
-    let all = books.values().cloned().collect();
-    */
     let book_set: Result<Vec<Book>> = books.collect();
     match book_set {
         Ok(all_books) => {
@@ -185,10 +183,10 @@ GROUP BY ZBKLIBRARYASSET.ZASSETID;")?;
         }
     }
     
-    match format_name("Dr. John Doe") {
-        Some(name) => println!("{}", name),
-        None => println!("Nothing"),
-    }
+    // match format_name("Dr. John Doe") {
+    //     Some(name) => println!("{}", name),
+    //     None => println!("Nothing"),
+    // }
     Ok(())
 }
 
