@@ -68,18 +68,28 @@ fn find_sqlite_file(dir_path: &PathBuf) -> Option<PathBuf> {
 /// 
 /// * `name` - the name of the directory of interest
 /// 
-fn ibooks_directory_path(name: &str) -> PathBuf {
-    let mut dir_path = dirs::home_dir().expect("Could not get home directory");
-    dir_path.push("Library/Containers/com.apple.iBooksX/Data/Documents/");
-    dir_path.push(name);
-    dir_path
+fn ibooks_directory_path(name: &str) -> Option<PathBuf> {
+    match name {
+        "AEAnnotation" | "BKLibrary" => {
+            let mut dir_path = dirs::home_dir().expect("Could not get home directory");
+            dir_path.push("Library/Containers/com.apple.iBooksX/Data/Documents/");
+            dir_path.push(name);
+            Some(dir_path)
+        },
+        _ => None
+    }
+    
 }
 
 fn database_connection() -> Result<Connection> {
-    let bk_dir_path = ibooks_directory_path("BKLibrary");
-    let ae_dir_path = ibooks_directory_path("AEAnnotation");
-    // let bk_path:PathBuf;
-    // let ae_path:PathBuf;
+    let bk_dir_path = match ibooks_directory_path("BKLibrary") {
+        Some(p) => p,
+        None => panic!("No directory path generated"),
+    };
+    let ae_dir_path = match ibooks_directory_path("AEAnnotation") {
+        Some(p) => p,
+        None => panic!("No directory path generated"),
+    };
     let bk_path:PathBuf = match find_sqlite_file(&bk_dir_path) {
         Some(bk_path) => {
             println!("The bk_path TEST is {}", bk_path.display());
@@ -109,4 +119,27 @@ fn main() -> Result<()> {
     let c = database_connection();
 
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{ibooks_directory_path, get_last_path_component};
+    use crate::Path;
+    
+    #[test]
+    fn test_ibooks_dir_not_valid() {
+        assert_eq!(ibooks_directory_path("DogFish"), None)
+    }
+    #[test]
+    fn test_ibooks_dir_valid_aeannotation() {
+        assert_ne!(ibooks_directory_path("AEAnnotation"), None)
+    }
+    #[test]
+    fn test_ibooks_dir_valid_bklibrary() {
+        assert_ne!(ibooks_directory_path("BKLibrary"), None)
+    }
+    #[test]
+    fn test_last_path_comp() {
+        assert_eq!(get_last_path_component(Path::new("/Users/dog/fish")), "fish")
+    }
 }
