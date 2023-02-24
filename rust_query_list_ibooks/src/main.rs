@@ -2,9 +2,10 @@ use rusqlite::{params, Connection, Result};
 //use regex::Regex;
 use dirs;
 use std::path::{PathBuf, Path};
-use std::fs::{self, DirEntry};
+use std::fs::{self};
 
-#[derive(Debug)]
+//#[derive(Debug)]
+#[allow(dead_code)]
 struct Book {
     id: String,
     annotations: u32,
@@ -12,29 +13,6 @@ struct Book {
     author: String,
     term: String,
 }
-
-// fn find_sqlite_file(path: &Path) -> Option<PathBuf> {
-//     let dir_name = path.file_name()?.to_str()?;
-//     let file_name = format!("{}.sqlite", dir_name);
-//     if let Ok(entries) = fs::read_dir(path) {
-//         for entry in entries.flatten() {
-//             if let Ok(file_type) = entry.file_type() {
-//                 if file_type.is_file() {
-//                     if let Some(file_name) = entry.file_name().to_str() {
-//                         if file_name == &file_name {
-//                             return Some(entry.path());
-//                         }
-//                     }
-//                 } else if file_type.is_dir() {
-//                     if let Some(file_path) = find_sqlite_file(&entry.path()) {
-//                         return Some(file_path);
-//                     }
-//                 }
-//             }
-//         }
-//     }
-//     None
-// }
 
 fn get_last_path_component(path: &Path) -> String {
     path.file_name().unwrap().to_string_lossy().into_owned()
@@ -61,19 +39,45 @@ fn find_sqlite_file(dir_path: &PathBuf) -> Option<PathBuf> {
     None
 }
 
-fn main() -> Result<()> {
+fn ibooks_directory_path(name: &str) -> PathBuf {
     let mut dir_path = dirs::home_dir().expect("Could not get home directory");
-    dir_path.push("Library/Containers/com.apple.iBooksX/Data/Documents/BKLibrary");
-    //let last_comp = dir_path.file_name().unwrap().to_string_lossy().into_owned();
-    
-    //let lc = get_last_path_component(&dir_path);
-    //println!("{} is the last comp", lc);
+    dir_path.push("Library/Containers/com.apple.iBooksX/Data/Documents/");
+    dir_path.push(name);
+    dir_path
+}
 
-    let path = find_sqlite_file(&dir_path);
-    if let Some(path) = find_sqlite_file(&dir_path) {
-        println!("{} is the sqlite file", path.display());
-    }
+fn database_connection() -> Result<Connection> {
+    let bk_dir_path = ibooks_directory_path("BKLibrary");
+    let ae_dir_path = ibooks_directory_path("AEAnnotation");
+    // let bk_path:PathBuf;
+    // let ae_path:PathBuf;
+    let bk_path:PathBuf = match find_sqlite_file(&bk_dir_path) {
+        Some(bk_path) => {
+            println!("The bk_path TEST is {}", bk_path.display());
+            bk_path
+        },
+        None => panic!("no BKLibrary sqlite file"),
+    };
+    let ae_path:PathBuf =  match find_sqlite_file(&ae_dir_path) {
+        Some(ae_path) => {
+            println!("The ae_path TEST is {}", ae_path.display());
+            ae_path
+        },
+        None => panic!("No AEAnnotation sqlite file"),
+    };
+    let conn:Connection = Connection::open(bk_path)?;
+    let attach_query = format!("ATTACH '{}' as ae", ae_path.display());
+    conn.execute(
+        &attach_query,
+        params![],
+    )?;
     
+    Ok(conn)
+}
+
+#[allow(unused_variables)]
+fn main() -> Result<()> {
+    let c = database_connection();
 
     Ok(())
 }
