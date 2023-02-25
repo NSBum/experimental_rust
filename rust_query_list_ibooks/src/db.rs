@@ -3,6 +3,7 @@ use rusqlite::{params, Connection, Result};
 use std::path::{PathBuf};
 //use std::fs::{self};
 use super::filesys;
+//use super::annotations;
 
 pub fn database_connection() -> Result<Connection> {
     let bk_dir_path = match filesys::ibooks_directory_path("BKLibrary") {
