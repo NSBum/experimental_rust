@@ -1,3 +1,4 @@
+#![cfg_attr(debug_assertions, allow(dead_code, unused_imports))]
 
 use regex::Regex;
 
@@ -7,15 +8,6 @@ fn split_and_trim(input: &str) -> Vec<String> {
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect()
-}
-
-fn remove_degrees(name: &str) -> String {
-    let degrees = ["B.A.", "B.S.", "M.A.", "MD", "M.D.", "PhD", "M.S.", "Ph.D.", "Ed.D."];
-    let mut new_name = name.to_owned();
-    for degree in &degrees {
-        new_name = new_name.replace(degree, "");
-    }
-    new_name.replace(",","").trim().to_string()
 }
 
 fn name_component_count(name: &str) -> usize {
@@ -49,7 +41,6 @@ fn extract_last_name(name: &str) -> Option<&str> {
                     return Some(name_parts[2])
                 }
             }
-           
         },
         4 => {
             // is this like Dr. Harold F. Bloom?
@@ -68,6 +59,14 @@ fn extract_last_name(name: &str) -> Option<&str> {
     };
 }
 
+#[doc = r"Returns formatted authors
+
+Takes a list of authors as a string and returns it formatted
+in our preferred way, which is all last names
+
+# Arguments
+
+* `author` - a &str pointing to the raw author list"]
 pub fn processed_authors(author: &str) -> Option<String> {
     let authors = split_and_trim(author);
     let auth_count = authors.len();
@@ -75,7 +74,7 @@ pub fn processed_authors(author: &str) -> Option<String> {
         let base_auth = extract_last_name(&authors[0]);
         return match base_auth {
             Some(name) => {
-                let formatted_auth = format!("({})", name);
+                let formatted_auth = format!("{}", name);
                 return Some(formatted_auth);
             },
             None => None,
@@ -84,23 +83,23 @@ pub fn processed_authors(author: &str) -> Option<String> {
     else if auth_count == 2 {
         let base_auth_1 = extract_last_name(&authors[0]).expect("no auth 1");
         let base_auth_2 = extract_last_name(&authors[1]).expect("no auth 2!");
-        let formatted_auth = format!("({} & {})", base_auth_1, base_auth_2);
+        let formatted_auth = format!("{} & {}", base_auth_1, base_auth_2);
         return Some(formatted_auth);
     }
-    // for auth in &authors {
-    //     let base_auth = extract_last_name(&auth);
-    //     match auth_count {
-    //         1 => Some()
-    //     }
-    // }
+    else if auth_count > 2 {
+        let mut processed_auth_text = String::from("");
+        for author in authors.iter() {
+            processed_auth_text.push_str(extract_last_name(author).expect("No auth LN?!"));
+            processed_auth_text.push_str(", ");
+        }
+
+        return Some(processed_auth_text.trim_end_matches(", ").to_string());
+    }
     None
 }
+
 mod test {
-    use crate::utils::split_and_trim;
-    use super::remove_degrees;
-    use crate::utils::extract_last_name;
-    use crate::utils::name_component_count;
-    use crate::utils::processed_authors;
+    use super::*;
 
     #[test]
     fn test_split_and() {
@@ -148,21 +147,6 @@ mod test {
     // fn test_remove_dr_title() {
     //     assert_eq!(remove_suffixes("Dr. John Doe"), "John Doe");
     // }
-
-    #[test]
-    fn test_remove_md_with_periods() {
-        assert_eq!(remove_degrees("Marcus Welby, M.D."), "Marcus Welby");
-    }
-
-    #[test]
-    fn test_remove_md_without_periods() {
-        assert_eq!(remove_degrees("Marcus Welby, MD"), "Marcus Welby");
-    }
-
-    #[test]
-    fn test_remove_phd_with_periods() {
-        assert_eq!(remove_degrees("Robert Smith, Ph.D."), "Robert Smith");
-    }
 
     #[test]
     fn test_name_with_single_name() {
@@ -213,26 +197,32 @@ mod test {
 
     #[test]
     fn test_fully_processed_single_author() {
-        assert_eq!(processed_authors("Adam Smith"), Some("(Smith)".to_string()));
+        assert_eq!(processed_authors("Adam Smith"), Some("Smith".to_string()));
     }
 
     #[test]
     fn test_fully_processed_dual_authors_simple() {
         let actual = processed_authors("Harold Bloom & Isaac Stern");
-        let expected = Some("(Bloom & Stern)".to_string());
+        let expected = Some("Bloom & Stern".to_string());
         assert_eq!(actual, expected);
     }
 
     #[test]
     fn test_fully_processed_dual_authors_simple_with_initials() {
         let actual = processed_authors("Harold L. Bloom & Isaac R. Stern");
-        assert_eq!(actual, Some("(Bloom & Stern)".to_string()));
+        assert_eq!(actual, Some("Bloom & Stern".to_string()));
     }
 
     #[test]
     fn test_fully_processed_dual_authors_one_dr() {
         let actual = processed_authors("Dr. Harold Bloom & Isaac Stern");
-        let expected = Some("(Bloom & Stern)".to_string());
+        let expected = Some("Bloom & Stern".to_string());
+        assert_eq!(actual, expected);
+    }
+    #[test]
+    fn test_three_authors() {
+        let actual = processed_authors("Jim Bean & Johnny Walker & Hoggish Mann");
+        let expected = Some("Bean, Walker, Mann".to_string());
         assert_eq!(actual, expected);
     }
 }
