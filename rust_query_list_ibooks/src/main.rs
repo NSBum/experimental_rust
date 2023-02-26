@@ -1,5 +1,5 @@
 use rusqlite::{params, Result};
-use clap::Parser;
+use clap::{command, Command, arg, Subcommand};
 
 use tabled::{Table, Tabled};
 mod utils;
@@ -17,38 +17,58 @@ struct Book {
     author: String,
 }
 
+/*
+
+ let matches = command!() // requires `cargo` feature
+        .propagate_version(true)
+        .subcommand_required(true)
+        .arg_required_else_help(true)
+        .subcommand(
+            Command::new("export")
+                .about("Exports highlights and notes to Markdown")
+                .arg(arg!([NAME])),
+        )
+        .get_matches();
+
+    match matches.subcommand() {
+        Some(("export", sub_matches)) => println!(
+            "'myapp add' was used, name is: {:?}",
+            sub_matches.get_one::<String>("NAME")
+        ),
+        _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
+    }
+
+ */
+
 #[allow(unused_variables)]
 fn main() -> Result<()> {
-    // parse commang line args
-    let matches = App::new("ibx")
-    .version("0.7")
-    .author("Alan Duncan <duncan.alan@me.com>")
-    .about("Export your iBooks annotations to markdown")
-    .subcommand(SubCommand::with_name("list").about("List your iBooks"))
-    .subcommand(
-        SubCommand::with_name("notes")
-            .about("Export notes and highlights")
-            .arg(
-                Arg::with_name("FILE")
-                    .help("The file path to which notes will be exported")
-                    .required(true)
-                    .index(1),
-            ),
-    )
-    .get_matches();
+    let matches = command!() // requires `cargo` feature
+        .version("0.7")
+        .author("Alan Duncan <duncan.alan@me.com>")
+        .about("Export your iBooks annotations to markdown")
+        .subcommand(
+            Command::new("notes")
+                .about("Exports annotations to Markdown file")
+                .arg(arg!([BOOK_ID]))
+                .arg(arg!([PATH])),
+        )
+        .subcommand(Command::new("list").about("List iBooks with annotations"))
+        .get_matches();
 
-match matches.subcommand() {
-    ("list", Some(_)) => {
-        // handle `ibx list` command
-        println!("Listing something...");
+    match matches.subcommand() {
+        Some(("notes", sub_matches)) => {
+            let book_id = sub_matches.get_one::<String>("BOOK_ID")
+                .expect("no book id provided");
+            let export_path = sub_matches.get_one::<String>("PATH")
+                .expect("no path provided");
+            println!("'notes' command used, ID is: {:?}", book_id);
+        },
+        Some(("list", sub_matches)) => {
+            println!("book last was used");
+        },
+        _ => unreachable!("Exhausted list of subcommands and subcommand_required prevents `None`"),
     }
-    ("notes", Some(matches)) => {
-        // handle `ibx notes` command
-        let path = matches.value_of("FILE").unwrap();
-        println!("Showing notes from file: {}", path);
-    }
-    _ => unreachable!(),
-}
+    
     let c = db::database_connection()?;
     let mut stmt = c.prepare("select 
     ZBKLIBRARYASSET.ZASSETID,

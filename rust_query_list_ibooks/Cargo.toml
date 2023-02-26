@@ -10,4 +10,4 @@ rusqlite = { version = "0.28.0", features = ["modern_sqlite"]}
 dirs = "3.0.2"
 tabled = "0.10.0"
 regex = "1.7.1"
-clap = { version = "4.0", features = ["derive"] }
+clap = { version = "4.0", features = ["cargo"] }
