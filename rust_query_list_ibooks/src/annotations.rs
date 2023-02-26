@@ -55,7 +55,7 @@ mod test {
             note: String::from("my comment"),
         };
         let actual = annotation.markdown();
-        let expected = String::from("> something from text\nmy comment");
+        let expected = String::from("> something from text\n\nmy comment");
         assert_eq!(actual, expected);
     }
 
