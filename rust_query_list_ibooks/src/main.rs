@@ -10,15 +10,6 @@ mod annotations;
 mod bookinfo;
 mod book;
 
-// #[derive(Debug)]
-// #[derive(Tabled)]
-// struct Book {
-//     id: String,
-//     annotations: u32,
-//     title: String,
-//     author: String,
-// }
-
 #[allow(unused_variables)]
 fn main() -> Result<()> {
     let c = db::database_connection()?;
