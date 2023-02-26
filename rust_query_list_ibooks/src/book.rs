@@ -1,5 +1,5 @@
 
-use tabled::{Table, Tabled};
+use tabled::Tabled;
 
 #[derive(Debug)]
 #[derive(Tabled)]

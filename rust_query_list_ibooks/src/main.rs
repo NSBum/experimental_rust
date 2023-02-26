@@ -1,7 +1,8 @@
 use rusqlite::{params, Result};
 use clap::{command, Command, arg, Subcommand};
+use annotations::Annotation;
 
-use tabled::{Table, Tabled};
+use tabled::{Table};
 mod utils;
 mod db;
 mod filesys;
@@ -9,14 +10,14 @@ mod annotations;
 mod bookinfo;
 mod book;
 
-#[derive(Debug)]
-#[derive(Tabled)]
-struct Book {
-    id: String,
-    annotations: u32,
-    title: String,
-    author: String,
-}
+// #[derive(Debug)]
+// #[derive(Tabled)]
+// struct Book {
+//     id: String,
+//     annotations: u32,
+//     title: String,
+//     author: String,
+// }
 
 #[allow(unused_variables)]
 fn main() -> Result<()> {
@@ -41,6 +42,26 @@ fn main() -> Result<()> {
             let export_path = sub_matches.get_one::<String>("PATH")
                 .expect("no path provided");
             println!("'notes' command used, ID is: {:?}", book_id);
+            // just to get this book's author and title
+            let this_book = db::book_info_by_id(&book_id, &c).expect("no book info!");
+            println!("Book title is: {} by {}", this_book.title, this_book.author);
+            // now get the annotations
+            match db::annotations_by_id(&book_id, &c) {
+                Ok(annotations) => {
+                    println!("We have annotations");
+                    // TODO this is where we will export the annotations
+                    let mut md_out = format!("# Notes from _{}_", this_book.title);
+                    md_out.push_str("\n");
+                    md_out.push_str(&format!("by {}", this_book.author));
+                    md_out.push_str("\n");
+                    for annotation in annotations {
+                        md_out.push_str(&annotation.markdown().to_string());
+                        md_out.push_str("\n\n");
+                    }
+                    println!("Annotations → {}", md_out);
+                },
+                Err(e) => println!("Error getting annotations {:?}", e),
+            }
         },
         Some(("list", sub_matches)) => {
             println!("book list was used");
