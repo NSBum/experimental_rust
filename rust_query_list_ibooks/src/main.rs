@@ -24,7 +24,7 @@ fn main() -> Result<()> {
     let matches = command!() // requires `cargo` feature
         .version("0.7")
         .author("Alan Duncan <duncan.alan@me.com>")
-        .about("Export your iBooks annotations to markdown")
+        .about("Export your iBooks annotations to Markdown")
         .subcommand(
             Command::new("notes")
                 .about("Exports annotations to Markdown file")
