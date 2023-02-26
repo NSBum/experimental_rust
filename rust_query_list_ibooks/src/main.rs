@@ -1,6 +1,5 @@
-use rusqlite::{params, Result};
-use clap::{command, Command, arg, Subcommand};
-use annotations::Annotation;
+use rusqlite::{Result};
+use clap::{command, Command, arg};
 
 use tabled::{Table};
 mod utils;
