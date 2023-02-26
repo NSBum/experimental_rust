@@ -1,9 +1,10 @@
 use rusqlite::{params, Connection, Result};
 //use dirs;
 use std::path::{PathBuf};
-use crate::Book;
+use crate::book::*;
 use crate::annotations::*;
 use crate::bookinfo::*;
+use super::utils;
 //use std::fs::{self};
 use super::filesys;
 
@@ -36,6 +37,24 @@ pub fn database_connection() -> Result<Connection> {
     )?;
     
     Ok(conn)
+}
+
+pub fn book_list(conn: &Connection) -> Result<Vec<Book>> {
+    let query = book_list_query();
+    let mut stmt = conn.prepare(&query)?;
+    let books = stmt.query_map(params![], |row| {
+        // make the authors more presentable
+        // before creating the Book struct
+        let some_auth:String = row.get(2)?;
+        let formatted_author = utils::processed_authors(&some_auth).expect("No author?!");
+        Ok(Book {
+            id: row.get(0)?,
+            title: row.get(1)?,
+            author: formatted_author,
+            annotations: row.get(3)?,
+        })
+    })?;
+    books.collect()
 }
 
 pub fn annotations_by_id(id: &str, conn: &Connection) -> Result<Vec<Annotation>> {
