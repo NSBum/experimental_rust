@@ -1,10 +1,12 @@
 use rusqlite::{params, Result};
-//use regex::Regex;
+use clap::Parser;
 
 use tabled::{Table, Tabled};
 mod utils;
 mod db;
 mod filesys;
+mod annotations;
+mod bookinfo;
 
 #[derive(Debug)]
 #[derive(Tabled)]
@@ -17,6 +19,36 @@ struct Book {
 
 #[allow(unused_variables)]
 fn main() -> Result<()> {
+    // parse commang line args
+    let matches = App::new("ibx")
+    .version("0.7")
+    .author("Alan Duncan <duncan.alan@me.com>")
+    .about("Export your iBooks annotations to markdown")
+    .subcommand(SubCommand::with_name("list").about("List your iBooks"))
+    .subcommand(
+        SubCommand::with_name("notes")
+            .about("Export notes and highlights")
+            .arg(
+                Arg::with_name("FILE")
+                    .help("The file path to which notes will be exported")
+                    .required(true)
+                    .index(1),
+            ),
+    )
+    .get_matches();
+
+match matches.subcommand() {
+    ("list", Some(_)) => {
+        // handle `ibx list` command
+        println!("Listing something...");
+    }
+    ("notes", Some(matches)) => {
+        // handle `ibx notes` command
+        let path = matches.value_of("FILE").unwrap();
+        println!("Showing notes from file: {}", path);
+    }
+    _ => unreachable!(),
+}
     let c = db::database_connection()?;
     let mut stmt = c.prepare("select 
     ZBKLIBRARYASSET.ZASSETID,
