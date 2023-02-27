@@ -47,15 +47,15 @@ pub fn find_sqlite_file(dir_path: &PathBuf) -> Option<PathBuf> {
     None
 }
 
-/// Returns path to iBooks data directory
-/// 
-/// Given one of "AEAnnotation" or "BKLibrary" returns the path to
-/// that iBooks data directory
-/// 
-/// # Arguments
-/// 
-/// * `name` - the name of the directory of interest
-/// 
+#[doc = r#"Returns path to iBooks data directory
+
+Given one of "AEAnnotation" or "BKLibrary" returns the path to
+that iBooks data directory
+
+# Arguments
+
+* `name` - the name of the directory of interest
+"#]
 pub fn ibooks_directory_path(name: &str) -> Option<PathBuf> {
     match name {
         "AEAnnotation" | "BKLibrary" => {

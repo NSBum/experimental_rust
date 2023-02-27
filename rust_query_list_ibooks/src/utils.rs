@@ -89,7 +89,6 @@ pub fn processed_authors(author: &str) -> Option<String> {
             processed_auth_text.push_str(extract_last_name(author).expect("No auth LN?!"));
             processed_auth_text.push_str(", ");
         }
-
         return Some(processed_auth_text.trim_end_matches(", ").to_string());
     }
     None
