@@ -1,6 +1,7 @@
 use dirs;
 use std::path::{PathBuf, Path};
-use std::fs::{self};
+use std::fs::{self, File};
+use std::io::Write;
 
 /**
 Returns the last path component of a path
@@ -45,6 +46,21 @@ pub fn find_sqlite_file(dir_path: &PathBuf) -> Option<PathBuf> {
         }
     }
     None
+}
+
+pub fn save_markdown(md: &str, path: &str) {
+    let fpath = PathBuf::from(path);
+    // let mut file = File::create(&path);
+    match File::create(&path) {
+        Ok(mut file) => {
+            match file.write_all(md.to_string().as_bytes()) {
+                Ok(()) => println!("Markdown file exported to {}", &fpath.display()),
+                Err(e) => panic!("Unable to write to path provided - {:?}", e),
+            }
+        },
+        Err(e) => panic!("Unable to write to path provided - {:?}", e),
+    }
+    
 }
 
 #[doc = r#"Returns path to iBooks data directory

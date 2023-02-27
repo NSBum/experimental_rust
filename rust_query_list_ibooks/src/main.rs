@@ -2,6 +2,8 @@ use rusqlite::{Result};
 use clap::{command, Command, arg};
 
 use tabled::{Table};
+
+use crate::filesys::save_markdown;
 mod utils;
 mod db;
 mod filesys;
@@ -45,6 +47,7 @@ fn main() -> Result<()> {
                         md_out.push_str("\n\n");
                     }
                     println!("Annotations → {}", md_out);
+                    save_markdown(&md_out, &export_path);
                 },
                 Err(e) => println!("Error getting annotations {:?}", e),
             }
