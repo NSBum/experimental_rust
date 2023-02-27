@@ -40,11 +40,6 @@ fn main() -> Result<()> {
             match db::annotations_by_id(&book_id, &c) {
                 Ok(annotations) => {
                     println!("We have annotations");
-                    // TODO this is where we will export the annotations
-                    // let mut md_out = format!("# Notes from _{}_", this_book.title);
-                    // md_out.push_str("\n");
-                    // md_out.push_str(&format!("by {}", this_book.author));
-                    // md_out.push_str("\n");
                     let mut md_out = this_book.markdown();
                     for annotation in annotations {
                         md_out.push_str(&annotation.markdown().to_string());
