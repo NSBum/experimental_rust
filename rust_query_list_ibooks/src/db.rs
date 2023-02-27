@@ -1,11 +1,9 @@
 use rusqlite::{params, Connection, Result};
-//use dirs;
 use std::path::{PathBuf};
 use crate::book::*;
 use crate::annotations::*;
 use crate::bookinfo::*;
 use super::utils;
-//use std::fs::{self};
 use super::filesys;
 
 pub fn database_connection() -> Result<Connection> {

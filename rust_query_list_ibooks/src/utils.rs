@@ -29,9 +29,6 @@ fn extract_last_name(name: &str) -> Option<&str> {
             if name_parts[0] == "Dr." {
                 Some(name_parts[2])
             }
-            // if degrees.contains(&name_parts[0]) {
-            //     Some(name_parts[2])
-            // is it like Cox-Bloom Ph.D., Jim
             else { 
                 let maybe_phd = name_parts[1].trim_end_matches(",");
                 if degrees.contains(&maybe_phd) {
@@ -142,11 +139,6 @@ mod test {
         assert_eq!(splits[0], "Jim Fix");
         assert_eq!(splits[1], "John Doe");
     }
-
-    // #[test]
-    // fn test_remove_dr_title() {
-    //     assert_eq!(remove_suffixes("Dr. John Doe"), "John Doe");
-    // }
 
     #[test]
     fn test_name_with_single_name() {

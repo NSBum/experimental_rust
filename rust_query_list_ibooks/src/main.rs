@@ -9,7 +9,6 @@ mod annotations;
 mod bookinfo;
 mod book;
 
-
 #[allow(unused_variables)]
 fn main() -> Result<()> {
     let c = db::database_connection()?;
